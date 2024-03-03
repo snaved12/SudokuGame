@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Solver</title>
+    <style>
+        /* Apply a background color to the entire body */
+        
+        body {
+            background-color: #f0f0f0;
+            margin: 0; /* Remove default margin */
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: -500px;
+            font-family: 'Helvetica Neue', sans-serif;
+            color: #333;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        /*
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: absolute;
+            bottom: 15%;
+            left: 48%;
+            transform: translateX(-50%);
+        }*/
+
+        button {
+            margin-top: 15px;
+            padding: 15px 30px;
+            font-size: 30px;
+            cursor: pointer;
+            width: 100px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .sudoku-container {
+            display: grid;
+            grid-template-columns: repeat(9, 40px);
+            grid-template-rows: repeat(9, 40px);
+            gap: 1px;
+            border: 2px solid #000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            background-color: #fff;
+            margin-left: -300px;
+        }
+
+        .sudoku-container > div {
+            border: 2px solid #000;
+        }
+
+        .sudoku-cell {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            line-height: 40px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.3s;
+        }
+
+        .sudoku-cell:hover {
+            background-color: #e0e0e0;
+        }
+
+        .sudoku-cell input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+            background-color: transparent;
+            color: #333; /* Default color for existing numbers */
+        }
+
+        .sudoku-cell input.new-number {
+            color: #337ab7; /* Color for newly entered numbers */
+        }
+
+        .sudoku-cell input[readonly] {
+            color: #337ab7; /* Existing numbers (read-only) color */
+        }
+
+        .sudoku-container > div:nth-child(3n) {
+            border-bottom-width: 2px;
+        }
+
+        .sudoku-container > div:nth-child(3) ~ div {
+            border-top-width: 2px;
+        }
+
+        .sudoku-container > div:nth-child(9) ~ div {
+            border-top-width: 2px;
+        }
+
+        .sudoku-container > div:nth-child(3n+1) {
+            border-right-width: 2px;
+        }
+
+        .sudoku-container > div:nth-child(9n+1) {
+            border-right-width: 2px;
+        }
+
+        .sudoku-container > div:nth-child(3n+2) {
+            border-right-width: 2px;
+        }
+
+        .sudoku-container > div:nth-child(9n+2) {
+            border-right-width: 2px;
+        }
+
+        button#submit {
+            margin-top: 10px;
+            padding: 15px 20px;
+            max-height: 50px;
+            width: 100px;
+            font-size: 16px;
+            cursor: pointer;
+            position: absolute;
+            bottom: 15%;
+            left: 44%;
+            text-align: center;
+            margin-right: 60px; /* Adjust the margin-right value as needed */
+        }
+
+        button#solution {
+            margin-top: 10px;
+            padding: 15px 20px;
+            max-height: 50px;
+            width: 150px;
+            font-size: 16px;
+            cursor: pointer;
+            position: absolute;
+            bottom: 15%;
+            left: 30%;
+            text-align: center;
+            margin-right: 50px; /* Adjust the margin-right value as needed */
+        }
+
+        button#progress {
+            margin-top: 10px;
+            padding: 15px 20px;
+            max-height: 50px;
+            width: 150px;
+            font-size: 16px;
+            cursor: pointer;
+            position: absolute;
+            bottom: 15%;
+            left: 55%;
+            text-align: center;
+            margin-right: 60px; /* Adjust the margin-right value as needed */
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+<body>
+<h1>SUDOKU GAME</h1>
+<div class="sudoku-container" id="sudoku-container">
+    <!-- Display Sudoku matrix from the backend -->
+</div>
+
+<div class="button-container">
+    <a href="javascript:void(0);" onclick="submitSudoku()">
+        <button id="submit">Submit</button>
+    </a>
+</div>
+
+<div class="solution-container">
+    <a href="/solution">
+        <button id="solution">Show Solution </button>
+    </a>
+</div>
+
+<div class="progress-container">
+    <a href="javascript:void(0);" onclick="fetchProgress()">
+    <button id="progress">Show Progress </button>
+</a>
+</div>
+
+<script>
+    // Use jQuery to make an AJAX request
+    $(document).ready(function () {
+        $.ajax({
+            url: '/sudoku/getMatrix', // Update the URL to your controller endpoint
+            type: 'GET',
+            success: function (data) {
+                displaySudokuMatrix(data);
+            },
+            error: function () {
+                console.error('Failed to fetch Sudoku matrix');
+            }
+        });
+    });
+
+    function displaySudokuMatrix(sudokuMatrix) {
+        const sudokuContainer = document.getElementById('sudoku-container');
+
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                const cell = document.createElement('div');
+                cell.className = 'sudoku-cell';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.maxLength = 1;
+                input.id = `input-${row}-${col}`; // Set the correct id here
+                input.value = sudokuMatrix[row][col] !== 0 ? sudokuMatrix[row][col] : '';
+
+                cell.appendChild(input);
+                sudokuContainer.appendChild(cell);
+            }
+        }
+    }
+
+    function submitSudoku() {
+        const enteredMatrix = [];
+
+        // Traverse through the cells and gather entered values
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                const input = document.getElementById(`input-${row}-${col}`);
+                enteredMatrix.push(parseInt(input.value) || 0);
+
+                // Check if the input has a value and is not readonly
+                if (input.value !== "" && !input.hasAttribute('readonly')) {
+                    // Add a class to distinguish newly entered numbers
+                    input.classList.add('new-number');
+                }
+            }
+        }
+
+        // Convert the flattened array to a string (comma-separated values)
+        const matrixString = enteredMatrix.join(',');
+
+        // Add your AJAX request here to send 'matrixString' to the backend
+        // Example:
+        $.ajax({
+            url: '/submit',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ matrix: enteredMatrix }),
+            success: function (response) {
+                // Check the response and redirect accordingly
+                if (response === 'bingo') {
+                    window.location.href = '/bingo'; // Redirect to the Bingo page
+                } else {
+                    window.location.href = '/try';
+          // Redirect to the Try Again page
+                }
+            },
+            error: function () {
+                console.error('Failed to submit matrix');
+            }
+        });
+    }
+
+    function showProgress() {
+    $.ajax({
+        url: '/sudoku/progress',
+        type: 'GET',
+        success: function (mis) {
+            // Update the span with the received mis value
+            $('#wrongCount').text(mis);
+        },
+        error: function () {
+            console.error('Failed to fetch wrong input count');
+        }
+    });
+}
+/*
+function fetchProgress() {
+    // Create an array to store the matrix
+    var sudokuArray = [];
+
+    // Traverse through the cells and gather entered values
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            const input = document.getElementById(`input-${row}-${col}`);
+            sudokuArray.push(parseInt(input.value) || 0);
+        }
+    }
+
+    // Send the matrix to the /progress endpoint as request parameters
+    $.ajax({
+        url: url,
+        method: 'GET',
+        data: { 'matrix[]': sudokuArray }, // Use 'data' instead of 'url' to pass parameters
+        traditional: true, // This is important for sending arrays in jQuery AJAX
+        success: function (mis) {
+            // Update the span with the received mis value
+            $('#wrongCount').text(mis);
+            alert('Differences: ' + differences);
+        },
+        error: function () {
+            console.error('Failed to fetch wrong input count');
+        }
+    });
+}
+*/
+
+function fetchProgress() {
+    // Create an array to store the matrix
+    var sudokuArray = [];
+
+    // Traverse through the cells and gather entered values
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            const input = document.getElementById(`input-${row}-${col}`);
+            sudokuArray.push(parseInt(input.value) || 0);
+        }
+    }
+
+    // Send the matrix to the /progress endpoint as request parameters
+    $.ajax({
+        url: '/progress',
+        method: 'GET',
+        data: { 'matrix[]': sudokuArray }, // Use 'data' instead of 'url' to pass parameters
+        traditional: true, // This is important for sending arrays in jQuery AJAX
+        success: function (differences) {
+            // Display an alert with the received differences value
+            alert('Differences: ' + differences);
+        },
+        error: function () {
+            console.error('Failed to fetch wrong input count');
+        }
+    });
+}
+
+</script>
+
+</body>
+</html>

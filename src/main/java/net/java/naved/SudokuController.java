@@ -342,6 +342,11 @@ public class SudokuController {
         System.out.println("THIS IS SEXY BRO"+differences);
         return "ppp";
     }
+    
+    @GetMapping("/about")
+    public String about() {
+        return "about";
+    }
 
 
 }

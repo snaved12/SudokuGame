@@ -176,11 +176,31 @@
             text-align: center;
             margin-right: 60px; /* Adjust the margin-right value as needed */
         }
+        
+        button#info-button {
+    position: absolute;
+    top: 65px; /* Adjust the top position as needed */
+    right:500px; /* Adjust the right position as needed */
+    width: 30px;
+    height: 30px; /* Set the same height as the width for a perfect circle */
+    border-radius: 50%;
+    background-color: transparent;
+    color: #000; /* Set the text color to black */
+    font-size: 16px;
+    cursor: pointer;
+    border: 5px solid #000; /* Add a black border */
+     line-height: 5px;
+     padding-left: 9px;
+    text-align: center; 
+}
+        
     </style>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 </head>
 <body>
-<h1>SUDOKU GAME</h1>
+<h1>SUDOKU GAME <a href="/about"><button id="info-button">info</button></a></h1>
+
+
 <div class="sudoku-container" id="sudoku-container">
     <!-- Display Sudoku matrix from the backend -->
 </div>
@@ -202,6 +222,7 @@
     <button id="progress">Show Progress </button>
 </a>
 </div>
+
 
 <script>
     // Use jQuery to make an AJAX request
